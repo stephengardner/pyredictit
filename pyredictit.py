@@ -2,13 +2,15 @@ import datetime
 import mechanicalsoup
 import re
 
+
 def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
-        
+
 class Contract:
-    def __init__(self, market, cid, name, type_, shares, avg_price, buy_offers, sell_offers, gain_loss, latest, buy, sell):
+    def __init__(self, market, cid, name, type_, shares, avg_price, buy_offers, sell_offers, gain_loss, latest, buy,
+                 sell):
         self.timestamp = datetime.datetime.now()
         self.market = market
         self.cid = cid
@@ -126,12 +128,12 @@ class Contract:
         load_side_page = api.browser.get(f'https://www.predictit.org/Trade/LoadBuy{type_}?contractId={self.cid}')
         token = load_side_page.soup.find('input', attrs={'name': '__RequestVerificationToken'}).get('value')
         r = api.browser.post('https://www.predictit.org/Trade/SubmitTrade',
-                              {'__RequestVerificationToken': token,
-                               'BuySellViewModel.ContractId': self.cid,
-                               'BuySellViewModel.TradeType': id_,
-                               'BuySellViewModel.Quantity': number_of_shares,
-                               'BuySellViewModel.PricePerShare': f'{float(buy_price)}',
-                               'X-Requested-With': 'XMLHttpRequest'})
+                             {'__RequestVerificationToken': token,
+                              'BuySellViewModel.ContractId': self.cid,
+                              'BuySellViewModel.TradeType': id_,
+                              'BuySellViewModel.Quantity': number_of_shares,
+                              'BuySellViewModel.PricePerShare': f'{float(buy_price)}',
+                              'X-Requested-With': 'XMLHttpRequest'})
         if str(r.status_code) == '200':
             print('Purchase successful!')
 
@@ -143,15 +145,14 @@ class Contract:
         load_side_page = api.browser.get(f'https://www.predictit.org/Trade/LoadSell{type_}?contractId={self.cid}')
         token = load_side_page.soup.find('input', attrs={'name': '__RequestVerificationToken'}).get('value')
         r = api.browser.post('https://www.predictit.org/Trade/SubmitTrade',
-                              {'__RequestVerificationToken': token,
-                               'BuySellViewModel.ContractId': self.cid,
-                               'BuySellViewModel.TradeType': id_,
-                               'BuySellViewModel.Quantity': number_of_shares,
-                               'BuySellViewModel.PricePerShare': f'{float(sell_price)}',
-                               'X-Requested-With': 'XMLHttpRequest'})
+                             {'__RequestVerificationToken': token,
+                              'BuySellViewModel.ContractId': self.cid,
+                              'BuySellViewModel.TradeType': id_,
+                              'BuySellViewModel.Quantity': number_of_shares,
+                              'BuySellViewModel.PricePerShare': f'{float(sell_price)}',
+                              'X-Requested-With': 'XMLHttpRequest'})
         if str(r.status_code) == '200':
             print('Sale successful!')
-
 
     def __str__(self):
         return f"{self.market}, {self.name}, {self.type_}, {self.shares}, {self.average_price}, {self.buy_offers},{self.sell_offers}, {self.gain_loss}, {self.latest}, {self.buy}, {self.sell}"
@@ -161,13 +162,30 @@ class pyredictit:
     def __init__(self):
         self.my_contracts = None
         self.gain_loss = None
+        self.available = None
+        self.invested = None
         self.browser = mechanicalsoup.Browser()
 
-    def current_gain_loss(self):
+    def update_balances(self):
         my_shares_page = self.browser.get('https://www.predictit.org/Profile/MyShares')
+        self.available = my_shares_page.soup.find("span", class_="SPBalance").text
         self.gain_loss = my_shares_page.soup.find("span", class_='SPShares').text
-        print(self.gain_loss)
+        self.invested = my_shares_page.soup.find("span", class_="SPPortfolio").text
 
+    def money_available(self):
+        self.update_balances()
+        print(f"You have {self.available} available.")
+
+    def current_gain_loss(self):
+        self.update_balances()
+        if '-' in self.gain_loss:
+            print(f"You've lost {self.gain_loss[1:]}.")
+        else:
+            print(f"You've gained {self.gain_loss[1:]}.")
+
+    def money_invested(self):
+        self.update_balances()
+        print(f"You have {self.invested} currently invested in contracts.")
 
     def create_authed_session(self, username, password):
         login_page = self.browser.get('https://www.predictit.org/')
