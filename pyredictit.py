@@ -2,6 +2,11 @@ import datetime
 import mechanicalsoup
 import re
 
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+        
 class Contract:
     def __init__(self, market, cid, name, type_, shares, avg_price, buy_offers, sell_offers, gain_loss, latest, buy, sell):
         self.timestamp = datetime.datetime.now()
@@ -218,12 +223,3 @@ class pyredictit:
         except TypeError:
             print('You don\'t have any active contracts!')
             return
-
-def chunks(l, n):
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
-
-if __name__ == '__main__':
-    predict_it_api = pyredictit()
-    predict_it_api.create_authed_session()
-    predict_it_api.get_my_contracts()
