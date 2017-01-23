@@ -157,7 +157,6 @@ class pyredictit:
         self.my_contracts = None
         self.gain_loss = None
         self.browser = mechanicalsoup.Browser()
-        self.authed_session = self.create_authed_session
 
     def current_gain_loss(self):
         my_shares_page = self.browser.get('https://www.predictit.org/Profile/MyShares')
@@ -175,7 +174,7 @@ class pyredictit:
 
     def get_my_contracts(self):
         self.my_contracts = []
-        my_shares = self.authed_session.get('https://www.predictit.org/Profile/GetSharesAjax')
+        my_shares = self.browser.get('https://www.predictit.org/Profile/GetSharesAjax')
         for market in my_shares.soup.find_all('table', class_='table table-striped table-center'):
             market_title = market.previous_element.previous_element.find('div', class_='outcome-title').find('a').get(
                 'title')
@@ -201,20 +200,24 @@ class pyredictit:
                 self.my_contracts.append(contract)
 
     def list_my_contracts(self):
-        for contract in self.my_contracts:
-            print('------')
-            print(contract.timestamp)
-            print(contract.market)
-            print(contract.name)
-            print(contract.shares)
-            print(contract.gain_or_loss)
-            print(contract.average_price)
-            print(contract.buy_price)
-            print(contract.sell_price)
-            print(contract.estimate_sale_of_current_shares)
-            print(contract.implied_odds)
-            print(contract.estimate_best_result)
-            print('------')
+        try:
+            for contract in self.my_contracts:
+                print('------')
+                print(contract.timestamp)
+                print(contract.market)
+                print(contract.name)
+                print(contract.shares)
+                print(contract.gain_or_loss)
+                print(contract.average_price)
+                print(contract.buy_price)
+                print(contract.sell_price)
+                print(contract.estimate_sale_of_current_shares)
+                print(contract.implied_odds)
+                print(contract.estimate_best_result)
+                print('------')
+        except TypeError:
+            print('You don\'t have any active contracts!')
+            return
 
 def chunks(l, n):
     for i in range(0, len(l), n):
