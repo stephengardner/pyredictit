@@ -16,6 +16,7 @@ class Contract:
         self.cid = cid
         self.name = name
         self.type_ = type_
+        print(self.type_)
         self.number_of_shares = int(shares)
         self.avg_price = avg_price
         self.buy_offers = buy_offers
@@ -124,9 +125,9 @@ class Contract:
                 continue
 
     def buy_shares(self, api, number_of_shares, buy_price):
-        if self.type_.lower() == 'no':
+        if self.type_.lower() == 'no' or 'short':
             type_, id_ = 'Short', '0'
-        elif self.type_.lower() == 'yes':
+        elif self.type_.lower() == 'yes' or 'long':
             type_, id_ = 'Long', '1'
         load_side_page = api.browser.get(f'https://www.predictit.org/Trade/LoadBuy{type_}?contractId={self.cid}')
         token = load_side_page.soup.find('input', attrs={'name': '__RequestVerificationToken'}).get('value')
@@ -245,3 +246,30 @@ class pyredictit:
         except TypeError:
             print('You don\'t have any active contracts!')
             return
+
+    def search_for_contracts(self, market, buy_sell, type_, contracts=None):
+        if type_.lower() == 'yes' or 'long' and buy_sell == 'buy':
+            type_ = {'long': 'BestBuyYesCost'}
+            sell = False
+        elif type_.lower() == 'no' or 'short' and buy_sell == 'buy':
+            type_ = {'short': 'BestBuyNoCost'}
+            sell = False
+        elif type_.lower() == 'yes' or 'long' and buy_sell == 'sell':
+            type_ = {'long': 'BestSellYesCost'}
+            sell = True
+        elif type_.lower() == 'no' or 'short' and buy_sell == 'sell':
+            type_ = {'short': 'BestSellNoCost'}
+            sell = True
+        if 'us' and 'election' in market.replace('.', '').lower():
+            market_link = 'https://www.predictit.org/api/marketdata/category/6'
+        elif 'us' and 'politic' in market.replace('.', '').lower():
+            market_link = 'https://www.predictit.org/api/marketdata/category/13'
+        elif 'world' in market.lower():
+            market_link = 'https://www.predictit.org/api/marketdata/category/4'
+        else:
+            print('Invalid market selected.')
+            return
+        raw_market_data = self.browser.get(market_link).json()
+        quit()
+
+        return
