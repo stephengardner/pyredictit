@@ -9,8 +9,8 @@ def chunks(l, n):
 
 
 class Contract:
-    def __init__(self, market, cid, name, type_, shares, avg_price, buy_offers, sell_offers, gain_loss, latest, buy,
-                 sell):
+    def __init__(self, market, cid, name, type_, shares, avg_price,
+                 buy_offers, sell_offers, gain_loss, latest, buy, sell):
         self.timestamp = datetime.datetime.now()
         self.market = market
         self.cid = cid
@@ -69,6 +69,8 @@ class Contract:
 
     @property
     def implied_odds(self):
+        """Implied odds of a contract are what a given resolution
+         in a market is being bought for currently."""
         return f"The implied odds of this contract resolving to {self.type_} are {self.buy.replace('¢', '%')}"
 
     def summary(self):
@@ -87,6 +89,7 @@ class Contract:
         print('-----')
 
     def update(self, api):
+        """Updates all share and contract info."""
         my_shares = api.authed_session.get('https://www.predictit.org/Profile/GetSharesAjax')
         for market in my_shares.soup.find_all('table', class_='table table-striped table-center'):
             market_title = market.previous_element.previous_element.find('div', class_='outcome-title').find('a').get(
@@ -223,6 +226,7 @@ class pyredictit:
                 self.my_contracts.append(contract)
 
     def list_my_contracts(self):
+        self.get_my_contracts()
         try:
             for contract in self.my_contracts:
                 print('------')
