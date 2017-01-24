@@ -16,7 +16,6 @@ class Contract:
         self.cid = cid
         self.name = name
         self.type_ = type_
-        print(self.type_)
         self.number_of_shares = int(shares)
         self.avg_price = avg_price
         self.buy_offers = buy_offers
@@ -90,7 +89,7 @@ class Contract:
         print('-----')
 
     def update(self, api):
-        """Updates all share and contract info."""
+        """Updates contract info."""
         my_shares = api.authed_session.get('https://www.predictit.org/Profile/GetSharesAjax')
         for market in my_shares.soup.find_all('table', class_='table table-striped table-center'):
             market_title = market.previous_element.previous_element.find('div', class_='outcome-title').find('a').get(
@@ -139,7 +138,10 @@ class Contract:
                               'BuySellViewModel.PricePerShare': f'{float(buy_price)}',
                               'X-Requested-With': 'XMLHttpRequest'})
         if str(r.status_code) == '200':
-            print('Purchase successful!')
+            if 'Confirmation Pending' in str(r.content):
+                print('Purchase offer successful!')
+            else:
+                print(r.content)
 
     def sell_shares(self, api, number_of_shares, sell_price):
         if self.type_.lower() == 'no':
@@ -248,6 +250,8 @@ class pyredictit:
             return
 
     def search_for_contracts(self, market, buy_sell, type_, contracts=None):
+        if not contracts:
+            contracts = []
         if type_.lower() == 'yes' or 'long' and buy_sell == 'buy':
             type_ = {'long': 'BestBuyYesCost'}
             sell = False
@@ -269,7 +273,13 @@ class pyredictit:
         else:
             print('Invalid market selected.')
             return
-        raw_market_data = self.browser.get(market_link).json()
-        quit()
+        raw_market_data = self.browser.get(market_link).json()['Markets']
+        for market in raw_market_data:
+            for contract in market['Contracts']:
+                if list(type_.keys())[0] == 'long':
+                    new_contract = Contract(type_='long', sell=contract[list(type_.values())[0]], buy='0.00', buy_offers=0,
+                                            sell_offers=0, avg_price='0.00', gain_loss='0.00', latest=contract['LastTradePrice'],
+                                            market=market['Name'], name=contract['Name'], shares='0', cid=contract['ID'])
+                    contracts.append(new_contract)
+        return contracts
 
-        return
