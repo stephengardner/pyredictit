@@ -15,6 +15,8 @@ class Contract:
         self.market = market
         self.cid = cid
         self.name = name
+        if self.market == self.name:
+            self.name = type_.title()
         self.type_ = type_
         self.number_of_shares = int(shares)
         self.avg_price = avg_price
